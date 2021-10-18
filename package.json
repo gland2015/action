@@ -1,0 +1,12 @@
+{
+  "name": "action",
+  "description": "cmd helper",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "commander": "^8.2.0",
+    "events": "^3.3.0",
+    "fs-extra": "^10.0.0",
+    "inquirer": "^8.2.0"
+  }
+}
