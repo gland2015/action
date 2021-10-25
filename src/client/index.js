@@ -34,22 +34,15 @@ program
   });
 
 program
-  .command("env")
+  .command("setenv") // hashcat, frp, caddy, http_proxy
   .argument("[target]", "to set target env")
   .action(function (target) {});
 
 program
-  .command("set")
+  .command("init") // frp - 添加到服务自动启动, work, yilinku
   .argument("[target]", "to set target set")
   .action(function (target) {
     console.log("set target - " + target);
-  });
-
-program
-  .command("http")
-  .argument("[target]", "to http target")
-  .action(function (target) {
-    console.log("http target - " + target);
   });
 
 program
@@ -67,13 +60,6 @@ program
   });
 
 program
-  .command("visit")
-  .argument("[target]", "to visit target")
-  .action(function (target) {
-    console.log("visit target - " + target);
-  });
-
-program
   .command("port")
   .argument("[target]", "to port target")
   .action(function (target) {
@@ -88,6 +74,42 @@ program
   });
 
 program.parse(process.argv);
+
+// 查看端口占用
+// Get-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess
+// netstat -aon | findstr "9050"
+// Get-NetTCPConnection -State Listen
+// https://adamtheautomator.com/netstat-port/
+
+/*
+bat cmd执行字符串命令：
+新的进程里:
+  https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-xp/bb490880(v=technet.10)?redirectedfrom=MSDN#EBAA
+  cmd.exe /c "echo 88"
+  cmd.exe /k "echo 88"
+  cmd.exe /c "set GG='797' | echo %GG%" // 不能有空格
+当前进程：
+  set cmdstr=set GG=888
+  %cmdstr%
+  echo %GG%
+获取PID:
+  powershell (Get-WmiObject Win32_Process -Filter ProcessId=$PID).ParentProcessId
+
+for /f %%a in ('powershell -Command "& {(Get-WmiObject Win32_Process -Filter ProcessId=$PID).ParentProcessId}"') do set "dow=%%a"
+
+ECHO %var%
+
+powershell:
+在当前进程执行:
+  $Command = "Get-Process"
+  Invoke-Expression $Command
+获取当前PID: $PID
+
+*/
+
+/*
+todo 禁止自动分配, vhd分配指定盘符 diskpart disable auto physical
+*/
 
 // 获取磁盘序列号
 // wmic diskdrive get Name, Manufacturer, Model, InterfaceType, MediaType, SerialNumber
@@ -125,4 +147,18 @@ program.parse(process.argv);
 
 // sc create "gland-service" binPath="C:\programfiles\.meta\action\src\service\publish\service.exe --contentRoot C:\programfiles\.meta\action\src\service\publish"
 
+// sc create "gland-service" binPath= "C:\programfiles\__meta\action\test\win_services.exe"
 // dotnet publish -o .\publish -r win10-x64
+
+// sc create "gland-service" binPath= "\"C:\programfiles\__meta\action\test\win_services.exe\" \"myargs1\" \"myargs2\"" start= auto type= interact type= own displayname= "gland-service"
+
+// sc create "gland-service" binPath= "\"C:\programfiles\__meta\action\test\win_services.exe\" --command \"node C:\programfiles\__meta\action\src\client\server.js\" --cwd \"C:\programfiles\__meta\action\src\client\""
+
+
+// sc create gland-service binPath= "C:\programfiles\__meta\action\test\win_services.exe --cmd node C:\programfiles\__meta\action\src\client\server.js --cwd C:\programfiles\__meta\action\src\client" start= auto displayname= gland-service
+// powershell 引号内 两个引号转义 "", 或使用撇号 `
+
+// bat文件中 %~dp0 表示当前bat所在的文件夹，结尾带反斜杠
+
+//  for /f %%a in ('node ./test.js') do set "dow=%%a"
+

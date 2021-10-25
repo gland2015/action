@@ -1,7 +1,7 @@
 import net from "net";
-import EventEmitter from "events";
 
 import { SOCKET_HOST, SOCKET_PORT } from "./constant.js";
+import { Shell } from "../public/Shell.js";
 
 class SocketBase {
   constructor() {
@@ -9,80 +9,47 @@ class SocketBase {
       host: SOCKET_HOST,
       port: SOCKET_PORT,
     });
-    this.msgId = 1;
-    this.cacheData = "";
-    this.event = new EventEmitter();
-
-    this.client.on("error", (err) => {
-      this.end(err);
-    });
+    this.resolve = null;
+    this.client.on("error", (err) => {});
     this.client.on("close", (hasErr) => {
-      this.end();
+      this.closed = true;
+      const reject = this.reject;
+      if (reject) {
+        this.reject = null;
+        this.resolve = null;
+        reject("connection close");
+      }
     });
-
     this.client.on("data", (res) => {
-      let text;
-      let resText = res.toString();
-      if (resText.match(/\~\$end$/)) {
-        text = this.cacheData + resText.slice(0, -5);
-        this.cacheData = "";
-      } else {
-        this.cacheData += resText;
-        return;
-      }
-
-      let json;
-      try {
-        let deStr = Buffer.from(text, "base64").toString();
-        json = JSON.parse(deStr);
-      } catch (err) {
-        console.log("err", err);
-      }
-
-      if (json && json.msgId) {
-        let payload;
-        try {
-          payload = JSON.parse(json.payload);
-        } catch {
-          payload = undefined;
-        }
-
-        // fs.writeFileSync("./1", JSON.stringify(payload));
-        if (payload !== undefined) {
-          this.event.emit("data", payload, json.msgId, null);
-        }
+      const resText = res.toString();
+      const resInfo = JSON.parse(resText);
+      if (this.resolve) {
+        this.resolve(resInfo);
       }
     });
-  }
 
-  getMsgId() {
-    let id = this.msgId;
-    this.msgId++;
-    return id;
+    this.shell = new Shell();
   }
 
   send(data) {
     return new Promise((resolve, reject) => {
-      let msgId = this.getMsgId();
-      let text = JSON.stringify({ msgId, payload: data });
-      this.client.write(Buffer.from(text).toString("base64"), "utf-8");
-
-      let listener = (rData, id, error) => {
-        if (error) {
-          this.event.removeListener("data", listener);
-          reject(error);
-        } else if (id === msgId) {
-          this.event.removeListener("data", listener);
-          resolve(rData);
-        }
-      };
-      this.event.on("data", listener);
+      if (this.closed) {
+        reject("connection close");
+        return;
+      }
+      const sendText = JSON.stringify(data);
+      this.client.write(sendText, "utf-8");
+      this.resolve = resolve;
+      this.reject = reject;
     });
   }
 
-  end(err) {
-    this.client.end();
-    this.event.emit("data", null, null, err || "socket close");
+  end() {
+    return new Promise((resolve, reject) => {
+      this.client.end(function () {
+        resolve();
+      });
+    });
   }
 }
 
@@ -91,49 +58,28 @@ class SocketClient extends SocketBase {
     super();
   }
 
-  selectMaxVolume(r, fn) {
-    let size = 0;
-    let o;
-
-    if (Array.isArray(r)) {
-      r.forEach(function (item) {
-        if (item.Size > size) {
-          size = item.Size;
-          o = item;
-        }
-      });
-    } else {
-      o = r;
-    }
-
-    return fn(o);
-  }
-
-  async GetVolumeByVhdFile(filepath) {
-    let r = await this.send({
-      type: "GetVolumeByVhdFile",
-      args: [filepath], // "F:\\project\\my_npm_package.vhdx"
-    });
-
-    if (!r) return "";
-    return this.selectMaxVolume(r, (o) => o.DriveLetter);
-  }
-
   async GetVolumeBySerialNumber(serialNumber) {
-    let r = await this.send({
+    const result = await this.send({
       type: "GetVolumeBySerialNumber",
       args: [serialNumber + ""],
     });
+    return result;
+  }
 
-    if (!r) return "";
-    return this.selectMaxVolume(r, (o) => o.DriveLetter);
+  async GetVhdFileHasAttach(filepath) {
+    const result = await this.send({
+      type: "GetVhdFileHasAttach",
+      args: [filepath],
+    });
+    return result;
   }
 
   async SetVhdFileMount(filepath) {
-    await this.send({
+    const result = await this.send({
       type: "SetVhdFileMount",
       args: [filepath],
     });
+    return result;
   }
 
   async SetVhdFileDisMount(filepath) {
@@ -143,14 +89,17 @@ class SocketClient extends SocketBase {
     });
   }
 
-  async GetVhdFileDiskStatus(filepath) {
-    let r = await this.send({
-      type: "GetVhdFileDiskStatus",
-      args: [filepath],
+  async SetProcessCommand(cmdStr) {
+    const pid = await this.shell.GetSessionPid();
+    await this.send({
+      type: "SetProcessCommand",
+      args: [pid, cmdStr],
     });
+  }
 
-    if (!r) return false;
-    return this.selectMaxVolume(r, (o) => o.Attached);
+  async GetProcessCommand() {
+    const pid = await this.shell.GetSessionPid();
+    return await this.send({ type: "GetProcessCommand", args: [pid] });
   }
 }
 

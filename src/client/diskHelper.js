@@ -15,14 +15,15 @@ export class DiskHelper {
     const findFn = (arr, parents) => {
       if (arr && arr.length) {
         arr.forEach((o) => {
-          fn(o, parents);
-          if (o.childs) {
-            findFn(o.childs, parents.concat(o));
+          if (o.enable) {
+            fn(o, parents);
+            if (o.childs) {
+              findFn(o.childs, parents.concat(o));
+            }
           }
         });
       }
     };
-
     findFn(this.diskContent, []);
   }
 
@@ -48,14 +49,14 @@ export class DiskHelper {
 
   findProjectByName(name) {
     let result = {
-      project: null,
+      value: null,
       parents: [],
     };
 
     this.findContent((o, parents) => {
       if (o.type === this.itemType.project && o.name === name) {
         result.parents = parents;
-        result.project = o;
+        result.value = o;
       }
     });
     return result;
@@ -63,14 +64,14 @@ export class DiskHelper {
 
   findVhdFileByName(name) {
     let result = {
-      vhdfile: null,
+      value: null,
       parents: [],
     };
 
     this.findContent((o, parents) => {
       if (o.type === this.itemType.virtualDisk && o.name === name) {
         result.parents = parents;
-        result.vhdfile = o;
+        result.value = o;
       }
     });
     return result;

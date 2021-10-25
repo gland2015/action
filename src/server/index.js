@@ -1,29 +1,51 @@
 import net from "net";
-import child_process from "child_process";
+import { ProcessHelper } from "./ProcessHelper.js";
+import { Shell } from "../public/Shell.js";
 
-const server = net.createServer(function (connection) {
-  connection.on("error", function (error) {});
-  connection.on("data", function (buff) {
-    let text = buff.toString();
-    let json = JSON.parse(text);
+async function run() {
+  const processHelper = new ProcessHelper();
+  const shell = new Shell(true);
 
-    console.log("json", json);
+  const server = net.createServer(function (connection) {
+    connection.on("error", function (error) {
+      connection.end();
+    });
+    connection.on("data", async function (buff) {
+      let t = Date.now();
+      const textData = buff.toString();
 
-    child_process.exec(
-      `powershell.exe -Command "Get-DiskImage -ImagePath F:\\project\\my_npm_package.vhdx | Get-Disk | Get-Partition | Get-Volume"`,
-      function (error, stdout, stderr) {
-        console.log("errrrr", error, stdout, stderr);
+      console.log("textData", textData);
+
+      const jsonData = JSON.parse(textData);
+      const type = jsonData.type;
+      const args = jsonData.args;
+      let payload = null;
+      if (type === "GetVhdFileHasAttach") {
+        payload = await shell.GetVhdFileHasAttach(args[0]);
+      } else if (type === "SetVhdFileMount") {
+        payload = await shell.SetVhdFileMount(args[0]);
+      } else if (type === "SetVhdFileDisMount") {
+        payload = await shell.SetVhdFileDisMount(args[0]);
+      } else if (type === "GetVolumeBySerialNumber") {
+        payload = await shell.GetVolumeBySerialNumber(args[0]);
+      } else if (type === "SetProcessCommand") {
+        payload = processHelper.SetProcessCommand(args[0], args[1]);
+      } else if (type === "GetProcessCommand") {
+        payload = processHelper.GetProcessCommand(args[0]);
       }
-    );
 
-    connection.write(JSON.stringify({ isRes: true, payload: { a: 3 } }));
-    connection.pipe(connection);
+      console.log("exec time: ", Date.now() - t);
+
+      connection.write(JSON.stringify(payload));
+      connection.pipe(connection);
+    });
   });
-});
 
-server.listen(18080, function () {
-  console.log("server is listening");
-});
+  server.listen(8098, function () {
+    console.log("server is listening");
+  });
 
+  server.on("error", function () {});
+}
 
-// 保存磁盘id，如果磁盘列表中有这个磁盘id，则快速映射，否则挂载后更新
+run();

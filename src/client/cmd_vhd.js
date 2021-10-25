@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs-extra";
+import child_process from "child_process";
 
 import { prompt } from "./utils.js";
 import { DiskBase } from "./diskBase.js";
@@ -31,27 +32,26 @@ export class Vhd {
       return this.select();
     }
 
-    const { vhdfile, parents } = this.diskHelper.findVhdFileByName(name);
-    if (!vhdfile) {
-      console.log(`vhdfile "${name}" not found`);
+    const { value, parents } = this.diskHelper.findVhdFileByName(name);
+    if (!value) {
+      console.log(`vhdfile "${name}" not found.`);
       return this.select();
     }
-
-    let diskLetter;
+    let rootPath;
     try {
-      diskLetter = await this.diskBase.getDiskLetterByList(parents);
+      rootPath = await this.diskBase.getRootPathBy(parents);
     } catch (errData) {
-      diskLetter = null;
+      rootPath = null;
       if (errData.type === ActionType.SHOW_MESSAGE) {
         return console.log(errData.message);
       }
       console.log(errData);
     }
-    if (!diskLetter) {
+    if (!rootPath) {
       return console.log(`"${name}" diskLetter not found, check config file.`);
     }
 
-    const relPath = path.resolve(diskLetter + ":/", vhdfile.filepath);
+    const relPath = path.resolve(rootPath, value.filepath);
     const isExist = await fs.pathExists(relPath);
 
     if (!isExist) {

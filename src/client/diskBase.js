@@ -14,7 +14,7 @@ export class DiskBase {
     return getSocket();
   }
 
-  async loadPhysicalDisk(serialNumber) {
+  async getPhysicalDiskLetter(serialNumber) {
     let letter = await this.socket.GetVolumeBySerialNumber(serialNumber);
     if (letter) {
       return letter;
@@ -37,8 +37,7 @@ export class DiskBase {
     });
   }
 
-  async loadVhdDisk(letter, rePath) {
-    const filepath = rePath ? path.resolve(letter + ":/", rePath) : letter;
+  async loadVhdDisk(filepath) {
     const exist = await fs.pathExists(filepath);
     if (!exist) {
       throw {
@@ -46,16 +45,10 @@ export class DiskBase {
         message: `vhd file "${filepath}" is not find, please check config file.`,
       };
     }
-
-    const hasAttached = await this.socket.GetVhdFileDiskStatus(filepath);
-    if (!hasAttached) {
-      await this.socket.SetVhdFileMount(filepath);
-    }
-    return await this.socket.GetVolumeByVhdFile(filepath);
+    return this.socket.SetVhdFileMount(filepath);
   }
 
-  async unloadVhdDisk(letter, rePath) {
-    const filepath = rePath ? path.resolve(letter + ":/", rePath) : letter;
+  async unloadVhdDisk(filepath) {
     const exist = await fs.pathExists(filepath);
     if (!exist) {
       throw {
@@ -63,27 +56,29 @@ export class DiskBase {
         message: `vhd file "${filepath}" is not find, please check config file.`,
       };
     }
-
-    const hasAttached = await this.socket.GetVhdFileDiskStatus(filepath);
-    if (hasAttached) {
-      await this.socket.SetVhdFileDisMount(filepath);
-    }
+    await this.socket.SetVhdFileDisMount(filepath);
   }
 
-  async getDiskLetterByList(list) {
-    let diskLetter;
+  async getRootPathBy(list) {
+    let tarPath = "";
     for (let i = 0; i < list.length; i++) {
       const item = list[i];
       if (item.type === this.diskHelper.itemType.physicalDisk) {
-        diskLetter = await this.loadPhysicalDisk(item.serialNumber);
+        const diskDir = item.mountDir && item.mountDir[0];
+        if (diskDir) {
+          tarPath = diskDir;
+        } else {
+          const letter = await this.loadPhysicalDisk(item.serialNumber);
+          tarPath = letter + ":/";
+        }
         continue;
       }
+
       if (item.type === this.diskHelper.itemType.virtualDisk) {
-        diskLetter = await this.loadVhdDisk(diskLetter, item.filepath);
+        tarPath = await this.loadVhdDisk(path.resolve(tarPath, item.filepath));
         continue;
       }
     }
-
-    return diskLetter;
+    return tarPath;
   }
 }

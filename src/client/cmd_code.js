@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs-extra";
+import child_process from "child_process";
 
 import { prompt } from "./utils.js";
 import { DiskBase } from "./diskBase.js";
@@ -31,27 +32,28 @@ export class Code {
       return this.select();
     }
 
-    const { project, parents } = this.diskHelper.findProjectByName(name);
-    if (!project) {
-      console.log(`Vscode project "${name}" not found`);
+    const { value, parents } = this.diskHelper.findProjectByName(name);
+    if (!value) {
+      console.log(`Vscode project "${name}" not found.`);
       return this.select();
     }
 
-    let diskLetter;
+    let rootPath;
     try {
-      diskLetter = await this.diskBase.getDiskLetterByList(parents);
+      rootPath = await this.diskBase.getRootPathBy(parents);
     } catch (errData) {
-      diskLetter = null;
+      rootPath = null;
       if (errData.type === ActionType.SHOW_MESSAGE) {
+        console.log("Error SHOW_MESSAGE:");
         return console.log(errData.message);
       }
       console.log("ddd", errData);
     }
 
-    if (!diskLetter)
+    if (!rootPath)
       return console.log(`"${name}" diskLetter not found, check config file`);
 
-    const relPath = path.resolve(diskLetter + ":/", project.filepath);
+    const relPath = path.resolve(rootPath + ":/", value.filepath);
     const isExist = await fs.pathExists(relPath);
 
     if (!isExist) {
