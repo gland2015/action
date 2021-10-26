@@ -47,11 +47,11 @@ export class Code {
         console.log("Error SHOW_MESSAGE:");
         return console.log(errData.message);
       }
-      console.log("ddd", errData);
     }
 
-    if (!rootPath)
-      return console.log(`"${name}" diskLetter not found, check config file`);
+    if (!rootPath) {
+      return console.log(`"${name}" rootPath not found, check config file`);
+    }
 
     const relPath = path.resolve(rootPath + ":/", value.filepath);
     const isExist = await fs.pathExists(relPath);

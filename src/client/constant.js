@@ -1,3 +1,5 @@
+export const ACT_SESSION_TYPE = (process.env.ACT_SESSION_TYPE || "").trim();
+export const ACT_SESSION_ID = (process.env.ACT_SESSION_ID || "").trim();
 export const SOCKET_PORT = 8098;
 export const SOCKET_HOST = "127.0.0.1";
 
@@ -10,16 +12,16 @@ export const EnvContent = [
   {
     name: "proxy_local",
     setValue: {
-      "$Env:HTTP_PROXY": "http://127.0.0.1:10081",
-      "$Env:HTTPS_PROXY": "http://127.0.0.1:10081",
+      HTTP_PROXY: "http://127.0.0.1:10081",
+      HTTPS_PROXY: "http://127.0.0.1:10081",
     },
     addValue: {},
   },
   {
     name: "proxy_public",
     setValue: {
-      "$Env:HTTP_PROXY": "http://106.15.236.181:10081",
-      "$Env:HTTPS_PROXY": "http://106.15.236.181:10081",
+      HTTP_PROXY: "http://106.15.236.181:10081",
+      HTTPS_PROXY: "http://106.15.236.181:10081",
     },
     addValue: {},
   },
@@ -27,21 +29,28 @@ export const EnvContent = [
     name: "frp",
     setValue: {},
     addValue: {
-      path: [],
+      path: ["C:\\programfiles\\frp"],
     },
   },
   {
     name: "caddy",
     setValue: {},
     addValue: {
-      path: [],
+      path: ["C:\\programfiles\\caddy"],
     },
   },
   {
     name: "hashcat",
     setValue: {},
     addValue: {
-      path: [],
+      path: ["C:\\programfiles\\hashcat"],
+    },
+  },
+  {
+    name: "ps-tools",
+    setValue: {},
+    addValue: {
+      path: ["C:\\programfiles\\PSTools"],
     },
   },
 ];

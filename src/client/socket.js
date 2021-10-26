@@ -1,6 +1,6 @@
 import net from "net";
 
-import { SOCKET_HOST, SOCKET_PORT } from "./constant.js";
+import { SOCKET_HOST, SOCKET_PORT, ACT_SESSION_ID } from "./constant.js";
 import { Shell } from "../public/Shell.js";
 
 class SocketBase {
@@ -90,16 +90,17 @@ class SocketClient extends SocketBase {
   }
 
   async SetProcessCommand(cmdStr) {
-    const pid = await this.shell.GetSessionPid();
     await this.send({
       type: "SetProcessCommand",
-      args: [pid, cmdStr],
+      args: [ACT_SESSION_ID, cmdStr],
     });
   }
 
   async GetProcessCommand() {
-    const pid = await this.shell.GetSessionPid();
-    return await this.send({ type: "GetProcessCommand", args: [pid] });
+    return await this.send({
+      type: "GetProcessCommand",
+      args: [ACT_SESSION_ID],
+    });
   }
 }
 

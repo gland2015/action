@@ -1,6 +1,5 @@
 import path from "path";
 import fs from "fs-extra";
-import child_process from "child_process";
 
 import { prompt } from "./utils.js";
 import { DiskBase } from "./diskBase.js";
@@ -45,10 +44,9 @@ export class Vhd {
       if (errData.type === ActionType.SHOW_MESSAGE) {
         return console.log(errData.message);
       }
-      console.log(errData);
     }
     if (!rootPath) {
-      return console.log(`"${name}" diskLetter not found, check config file.`);
+      return console.log(`"${name}" rootPath not found, check config file.`);
     }
 
     const relPath = path.resolve(rootPath, value.filepath);
@@ -59,7 +57,6 @@ export class Vhd {
         "path is not exist: " + relPath + ", please check config file"
       );
     }
-
     return await this.diskBase.loadVhdDisk(relPath);
   }
 }

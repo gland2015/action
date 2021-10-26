@@ -1,4 +1,5 @@
 import net from "net";
+import express from "express";
 import { ProcessHelper } from "./ProcessHelper.js";
 import { Shell } from "../public/Shell.js";
 
@@ -6,6 +7,7 @@ async function run() {
   const processHelper = new ProcessHelper();
   const shell = new Shell(true);
 
+  // socket
   const server = net.createServer(function (connection) {
     connection.on("error", function (error) {
       connection.end();
@@ -33,8 +35,10 @@ async function run() {
       } else if (type === "GetProcessCommand") {
         payload = processHelper.GetProcessCommand(args[0]);
       }
+      payload = payload === undefined ? null : payload;
 
       console.log("exec time: ", Date.now() - t);
+      console.log("payload", payload);
 
       connection.write(JSON.stringify(payload));
       connection.pipe(connection);
@@ -46,6 +50,20 @@ async function run() {
   });
 
   server.on("error", function () {});
+
+  // http
+  let app = express();
+  app.get("/process/command", function (req, res) {
+    const id = req.query?.id;
+    let payload = "";
+    if (id) {
+      payload = processHelper.GetProcessCommand(id);
+    }
+    res.json({payload});
+    res.end();
+  });
+
+  app.listen(8099);
 }
 
 run();

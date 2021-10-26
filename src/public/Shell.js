@@ -101,4 +101,13 @@ export class Shell {
     `);
     return result;
   }
+
+  async GetSessionPid2() {
+    const result = await this.runCmd(`
+        $tempId = (Get-WmiObject Win32_Process -Filter ProcessId=$PID).ParentProcessId
+        $tempId = (Get-WmiObject Win32_Process -Filter ProcessId=$tempId).ParentProcessId
+        (Get-WmiObject Win32_Process -Filter ProcessId=$tempId).ParentProcessId
+    `);
+    return result;
+  }
 }

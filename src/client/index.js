@@ -4,6 +4,7 @@ import { prompt } from "./utils.js";
 import { Code } from "./cmd_code.js";
 import { Vhd } from "./cmd_vhd.js";
 import { Unvhd } from "./cmd_unvhd.js";
+import { Env } from "./cmd_env.js";
 
 const program = new Command();
 
@@ -34,9 +35,12 @@ program
   });
 
 program
-  .command("setenv") // hashcat, frp, caddy, http_proxy
+  .command("env") // hashcat, frp, caddy, http_proxy
   .argument("[target]", "to set target env")
-  .action(function (target) {});
+  .action(async function (target) {
+    await new Env().exec(target);
+    process.exit();
+  });
 
 program
   .command("init") // frp - 添加到服务自动启动, work, yilinku
@@ -73,6 +77,7 @@ program
     console.log("git target - " + target);
   });
 
+// console.log("process.argv", process.argv);
 program.parse(process.argv);
 
 // 查看端口占用
@@ -94,10 +99,6 @@ bat cmd执行字符串命令：
   echo %GG%
 获取PID:
   powershell (Get-WmiObject Win32_Process -Filter ProcessId=$PID).ParentProcessId
-
-for /f %%a in ('powershell -Command "& {(Get-WmiObject Win32_Process -Filter ProcessId=$PID).ParentProcessId}"') do set "dow=%%a"
-
-ECHO %var%
 
 powershell:
 在当前进程执行:
@@ -154,7 +155,6 @@ todo 禁止自动分配, vhd分配指定盘符 diskpart disable auto physical
 
 // sc create "gland-service" binPath= "\"C:\programfiles\__meta\action\test\win_services.exe\" --command \"node C:\programfiles\__meta\action\src\client\server.js\" --cwd \"C:\programfiles\__meta\action\src\client\""
 
-
 // sc create gland-service binPath= "C:\programfiles\__meta\action\test\win_services.exe --cmd node C:\programfiles\__meta\action\src\client\server.js --cwd C:\programfiles\__meta\action\src\client" start= auto displayname= gland-service
 // powershell 引号内 两个引号转义 "", 或使用撇号 `
 
@@ -162,3 +162,25 @@ todo 禁止自动分配, vhd分配指定盘符 diskpart disable auto physical
 
 //  for /f %%a in ('node ./test.js') do set "dow=%%a"
 
+/*
+
+@echo off
+SET TOTO_1_2=hello
+set "varName=TOTO_1_2"
+echo 0: %TOTO_1_2% 
+call echo 1: %%%varName%%%
+
+setlocal enabledelayedexpansion
+for %%i in (%varname%) do echo 2: !%%i!
+echo 3: !%varName%!
+
+*/
+
+/*
+  bat中变量延迟扩展： setlocal enabledelayedexpansion
+  使用!var!扩展变量，可以两次扩展
+
+  另外两次扩展可以： call .... ，一个新的解释器
+  或者一个临时的批处理文件
+
+*/
