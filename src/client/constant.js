@@ -8,49 +8,38 @@ export const ActionType = {
   RESELECT: "RESELECT",
 };
 
+export const InitContent = {
+  env: {
+    toAdd: {
+      Path: [
+        "C:\\programfiles",
+        "C:\\programfiles\\frp",
+        "C:\\programfiles\\caddy",
+        "C:\\programfiles\\hashcat",
+        "C:\\programfiles\\PSTools",
+      ],
+    },
+    toSet: {},
+  },
+};
+
 export const EnvContent = [
   {
     name: "proxy_local",
-    setValue: {
+    toSet: {
       HTTP_PROXY: "http://127.0.0.1:10081",
       HTTPS_PROXY: "http://127.0.0.1:10081",
     },
-    addValue: {},
+    toAdd: {},
   },
   {
     name: "proxy_public",
-    setValue: {
+    toSet: {
       HTTP_PROXY: "http://106.15.236.181:10081",
       HTTPS_PROXY: "http://106.15.236.181:10081",
     },
-    addValue: {},
-  },
-  {
-    name: "frp",
-    setValue: {},
-    addValue: {
-      path: ["C:\\programfiles\\frp"],
-    },
-  },
-  {
-    name: "caddy",
-    setValue: {},
-    addValue: {
-      path: ["C:\\programfiles\\caddy"],
-    },
-  },
-  {
-    name: "hashcat",
-    setValue: {},
-    addValue: {
-      path: ["C:\\programfiles\\hashcat"],
-    },
-  },
-  {
-    name: "ps-tools",
-    setValue: {},
-    addValue: {
-      path: ["C:\\programfiles\\PSTools"],
+    toAdd: {
+      Path: ["C:\\asad"]
     },
   },
 ];

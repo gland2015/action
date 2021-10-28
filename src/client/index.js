@@ -5,6 +5,8 @@ import { Code } from "./cmd_code.js";
 import { Vhd } from "./cmd_vhd.js";
 import { Unvhd } from "./cmd_unvhd.js";
 import { Env } from "./cmd_env.js";
+import { Init } from "./cmd_init.js";
+import { Http } from "./cmd_http.js";
 
 const program = new Command();
 
@@ -42,12 +44,10 @@ program
     process.exit();
   });
 
-program
-  .command("init") // frp - 添加到服务自动启动, work, yilinku
-  .argument("[target]", "to set target set")
-  .action(function (target) {
-    console.log("set target - " + target);
-  });
+program.command("init").action(async function (target) {
+  await new Init().exec();
+  process.exit();
+});
 
 program
   .command("proxy")
@@ -57,10 +57,13 @@ program
   });
 
 program
-  .command("download")
-  .argument("[target]", "to download target")
-  .action(function (target) {
-    console.log("download target - " + target);
+  .command("http")
+  .option("--dir", "Server Root Directory")
+
+  .action(async function (target) {
+    console.log("tart", target);
+    // await new Http().exec();
+    // process.exit();
   });
 
 program
@@ -184,3 +187,6 @@ echo 3: !%varName%!
   或者一个临时的批处理文件
 
 */
+// %USERPROFILE%\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Bandizip\;C:\Users\gland\AppData\Local\Programs\Microsoft VS Code\bin;C:\programfiles;%USERPROFILE%\.dotnet\tools;C:\Users\gland\AppData\Roaming\npm;
+
+// 打开vscode内置 simple browser: ctrl + shift + p -> 输入simple browser

@@ -32,40 +32,44 @@ export class Env {
       return this.select();
     }
 
-    const { setValue, addValue } = target;
+    const { toSet, toAdd } = target;
     const cmdList = [];
 
-    for (let key in setValue) {
-      const value = setValue[key];
-      if (ACT_SESSION_TYPE === "CommandPrompt") {
-        cmdList.push(`set ${key}=${value}`);
-      } else if (ACT_SESSION_TYPE === "PowerShell") {
-        cmdList.push(`$Env:${key}=${value}`);
+    for (let key in toSet) {
+      const value = toSet[key];
+      if (process.env[key] !== value) {
+        if (ACT_SESSION_TYPE === "CommandPrompt") {
+          cmdList.push(`set ${key}=${value}`);
+        } else if (ACT_SESSION_TYPE === "PowerShell") {
+          cmdList.push(`$Env:${key}="${value}"`);
+        }
       }
     }
 
-    for (let key in addValue) {
-      const valueList = addValue[key];
-      let currentValue = (process.env[key] || "").trim();
+    for (let key in toAdd) {
+      const valueList = toAdd[key];
+      let curValue = (process.env[key] || "").trim();
       let addChar = "";
-      const isEndWithSem = /\;$/.test(currentValue);
-      if (!isEndWithSem) {
-        currentValue = currentValue + ";";
+      const isEndWithSem = /\;$/.test(curValue);
+      if (!isEndWithSem && curValue) {
+        curValue = curValue + ";";
         addChar = ";";
       }
 
       const appendList = valueList.filter(function (value) {
-        if (currentValue.indexOf(value + ";") === -1) {
+        if (curValue.indexOf(value + ";") === -1) {
           return true;
         }
         return false;
       });
 
       if (appendList.length) {
+        const appendStr = addChar + appendList.join(";");
         if (ACT_SESSION_TYPE === "CommandPrompt") {
-          cmdList.push(`set ${key}=%${key}%${addChar}${appendList.join(";")}`);
+          const head = curValue ? `%${key}%` : "";
+          cmdList.push(`set ${key}=${head}${appendStr}`);
         } else if (ACT_SESSION_TYPE === "PowerShell") {
-          cmdList.push(`$Env:${key}+="${addChar}${appendList.join(";")}"`);
+          cmdList.push(`$Env:${key}${curValue && "+"}="${appendStr}"`);
         }
       }
     }

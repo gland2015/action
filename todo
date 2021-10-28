@@ -30,7 +30,6 @@ act proxy
 act download <link>
 下载
 
-act visit <link>
 
 act port kill 
 act port stat 

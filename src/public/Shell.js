@@ -37,6 +37,7 @@ export class Shell {
     return this.$runCmd;
   }
 
+  /*--------  Storage Operation --------*/
   selectMaxVolume(data, fn) {
     let size = 0;
     let tarVol;
@@ -94,6 +95,7 @@ export class Shell {
     }
   }
 
+  /*-------- Process Operation ----------*/
   async GetSessionPid() {
     const result = await this.runCmd(`
         $tempId = (Get-WmiObject Win32_Process -Filter ProcessId=$PID).ParentProcessId
@@ -109,5 +111,37 @@ export class Shell {
         (Get-WmiObject Win32_Process -Filter ProcessId=$tempId).ParentProcessId
     `);
     return result;
+  }
+
+  /*----------- Env Operation ------------*/
+  async GetUserEnvList() {
+    const listStr = await this.runCmd(`
+      reg query HKCU\\Environment
+    `);
+    const envList = listStr
+      .split("\n")
+      .map((o) => o.trim())
+      .filter(Boolean)
+      .filter((o, i) => i)
+      .map((o) => {
+        const mat = o.match(/(\w+)\s+(\w+)\s+(.*)/);
+        return {
+          name: mat[1],
+          type: mat[2],
+          value: mat[3] || "",
+        };
+      });
+    return envList;
+  }
+
+  async GetUserEnvByKey(key) {
+    const envList = await this.GetUserEnvList();
+    return envList.find((o) => o.name.toLowerCase() === key.toLowerCase());
+  }
+
+  async SetUserEnvValue(key, value) {
+    await this.runCmd(`
+      Set-ItemProperty -Path HKCU:\\Environment -Name ${key} -Value "${value}" -Type ExpandString
+    `);
   }
 }
