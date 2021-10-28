@@ -1,3 +1,12 @@
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const CONFIG_ROOT_PATH = path.resolve(__dirname, "../../../config");
+export const SSL_CERT_PATH = path.resolve(CONFIG_ROOT_PATH, "./ssl_cert/localhost.crt");
+export const SSL_KEY_PATH = path.resolve(CONFIG_ROOT_PATH, "./ssl_cert/localhost.key");
+
 export const ACT_SESSION_TYPE = (process.env.ACT_SESSION_TYPE || "").trim();
 export const ACT_SESSION_ID = (process.env.ACT_SESSION_ID || "").trim();
 export const SOCKET_PORT = 8098;
@@ -17,6 +26,7 @@ export const InitContent = {
         "C:\\programfiles\\caddy",
         "C:\\programfiles\\hashcat",
         "C:\\programfiles\\PSTools",
+        "C:\\Program Files\\OpenSSL-Win64\\bin",
       ],
     },
     toSet: {},
@@ -39,7 +49,7 @@ export const EnvContent = [
       HTTPS_PROXY: "http://106.15.236.181:10081",
     },
     toAdd: {
-      Path: ["C:\\asad"]
+      Path: ["C:\\asad"],
     },
   },
 ];

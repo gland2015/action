@@ -50,20 +50,21 @@ program.command("init").action(async function (target) {
 });
 
 program
+  .command("http")
+  .option("--dir <dir>", "Server Root Directory")
+  .option("--port <port>", "Server Listening Port")
+  .option("--proxy <proxy>", "Proxy Target")
+  .option("--https", "Enable HTTPS")
+  .action(async function (target) {
+    await new Http().exec(target);
+    process.exit();
+  });
+
+program
   .command("proxy")
   .argument("[target]", "to proxy target")
   .action(function (target) {
     console.log("proxy target - " + target);
-  });
-
-program
-  .command("http")
-  .option("--dir", "Server Root Directory")
-
-  .action(async function (target) {
-    console.log("tart", target);
-    // await new Http().exec();
-    // process.exit();
   });
 
 program
