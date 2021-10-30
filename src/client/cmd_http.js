@@ -4,11 +4,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import {
-  ACT_SESSION_TYPE,
-  SSL_CERT_PATH,
-  SSL_KEY_PATH,
-} from "./constant.js";
+import { ACT_SESSION_TYPE, SSL_CERT_ROOT_PATH } from "./constant.js";
 import { getSocket } from "./socket.js";
 
 export class Http {
@@ -59,7 +55,7 @@ export class Http {
     }
 
     if (args.https) {
-      commandStr += ` --ssl --cert "${SSL_CERT_PATH}" --key "${SSL_KEY_PATH}"`;
+      commandStr += ` --ssl --cert "${path.resolve(SSL_CERT_ROOT_PATH, "./sub_cert_localhost/localhost.crt")}" --key "${path.resolve(SSL_CERT_ROOT_PATH, "./sub_cert_localhost/localhost.key")}"`;
     }
 
     await this.socket.SetProcessCommand(commandStr);

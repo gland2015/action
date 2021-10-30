@@ -7,6 +7,9 @@ import { Unvhd } from "./cmd_unvhd.js";
 import { Env } from "./cmd_env.js";
 import { Init } from "./cmd_init.js";
 import { Http } from "./cmd_http.js";
+import { Proxy } from "./cmd_proxy.js";
+import { Test } from "./cmd_test.js";
+import { Download } from "./cmd_download.js";
 
 const program = new Command();
 
@@ -62,10 +65,24 @@ program
 
 program
   .command("proxy")
-  .argument("[target]", "to proxy target")
-  .action(function (target) {
-    console.log("proxy target - " + target);
+  .option("--map <map>", "URI -> FILE Map, JSON FILE")
+  .action(async function (args) {
+    await new Proxy().exec(args);
+    process.exit();
   });
+
+program
+  .command("download")
+  .arguments("[URL] [outFile]", "URL and outFile")
+  .action(async function (URL, outFile) {
+    await new Download().exec({ URL, outFile });
+    process.exit();
+  });
+
+program.command("test").action(async function (args) {
+  await new Test().exec(args);
+  process.exit();
+});
 
 program
   .command("port")

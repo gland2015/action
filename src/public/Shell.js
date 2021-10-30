@@ -1,4 +1,8 @@
+import path from "path";
+import fs from "fs-extra";
+import child_process from "child_process";
 import { PowerShell } from "node-powershell";
+
 import { makeStepExec } from "./makeStepExec.js";
 
 export class Shell {
@@ -142,6 +146,101 @@ export class Shell {
   async SetUserEnvValue(key, value) {
     await this.runCmd(`
       Set-ItemProperty -Path HKCU:\\Environment -Name ${key} -Value "${value}" -Type ExpandString
+    `);
+  }
+
+  /*--------------- SSL CERT Operation ----------------*/
+  async GenSSLRootCA(outdir) {
+    outdir = outdir || "./";
+    let dirExist = await fs.pathExists(outdir);
+    if (!dirExist) {
+      throw new Error("path is not exist: " + outdir);
+    }
+
+    let basename = "RootCA";
+    if (!basename) {
+      basename = "RootCA";
+    }
+    basename += "";
+
+    const outkeypath = path.join(outdir, basename + ".key");
+    const outpempath = path.join(outdir, basename + ".pem");
+    const outcrtpath = path.join(outdir, basename + ".crt");
+
+    try {
+      await this.runCmd(`
+        openssl req -x509 -nodes -new -sha256 -days 102400 -newkey rsa:2048 -keyout "${outkeypath}" -out "${outpempath}" -subj "/C=US/CN=Example-Root-CA"
+      `);
+    } catch {}
+
+    await this.runCmd(`
+      openssl x509 -outform pem -in "${outpempath}" -out "${outcrtpath}"
+    `);
+  }
+
+  async GenSSLSubCert(
+    domainList,
+    ipList,
+    outDir,
+    basename,
+    ca_pem_path,
+    ca_key_path
+  ) {
+    const domainsExtArr = [
+      "authorityKeyIdentifier=keyid,issuer",
+      "basicConstraints=CA:FALSE",
+      "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment",
+      "subjectAltName = @alt_names",
+      "[alt_names]",
+    ];
+    if (domainList) {
+      domainList.forEach((o, i) => {
+        domainsExtArr.push(`DNS.${i + 1} = ${o}`);
+      });
+    }
+    if (ipList) {
+      ipList.forEach((o, i) => {
+        domainsExtArr.push(`IP.${i + 1} = ${o}`);
+      });
+    }
+
+    const domainsExtText = domainsExtArr.join("\n");
+
+    const outDomainExtPath = path.join(outDir, "domains.ext");
+    await fs.outputFile(outDomainExtPath, domainsExtText);
+
+    const outkeypath = path.join(outDir, basename + ".key");
+    const outcsrpath = path.join(outDir, basename + ".csr");
+    const outcrtpath = path.join(outDir, basename + ".crt");
+
+    try {
+      await this.runCmd(`
+        openssl req -new -nodes -newkey rsa:2048 -keyout "${outkeypath}" -out "${outcsrpath}" -subj "/C=US/ST=YourState/L=YourCity/O=Example-Certificates/CN=${basename}.local"
+    `);
+    } catch {}
+
+    await this.runCmd(`
+      openssl x509 -req -sha256 -days 102400 -in "${outcsrpath}" -CA "${ca_pem_path}" -CAkey "${ca_key_path}" -CAcreateserial -extfile "${outDomainExtPath}" -out "${outcrtpath}"
+    `);
+  }
+
+  /* ------------ 网络请求相关 ------------ */
+  async download(URL, outFile) {
+    if (!URL) {
+      throw new Error("please input url");
+    }
+
+    if (!outFile) {
+      outFile = "./outFile";
+    }
+
+    let isExist = await fs.ensureFile(outFile);
+    if (isExist) {
+      throw new Error("file is exist: " + outFile);
+    }
+
+    await this.runCmd(`
+      Invoke-WebRequest "${URL}" -OutFile "${outFile}"
     `);
   }
 }

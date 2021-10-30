@@ -4,8 +4,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const CONFIG_ROOT_PATH = path.resolve(__dirname, "../../../config");
-export const SSL_CERT_PATH = path.resolve(CONFIG_ROOT_PATH, "./ssl_cert/localhost.crt");
-export const SSL_KEY_PATH = path.resolve(CONFIG_ROOT_PATH, "./ssl_cert/localhost.key");
+export const SSL_CERT_ROOT_PATH = path.resolve(CONFIG_ROOT_PATH, "./ssl_cert");
 
 export const ACT_SESSION_TYPE = (process.env.ACT_SESSION_TYPE || "").trim();
 export const ACT_SESSION_ID = (process.env.ACT_SESSION_ID || "").trim();
@@ -51,6 +50,14 @@ export const EnvContent = [
     toAdd: {
       Path: ["C:\\asad"],
     },
+  },
+  {
+    name: "proxy_file",
+    toSet: {
+      HTTP_PROXY: "http://127.0.0.1:8081",
+      HTTPS_PROXY: "http://127.0.0.1:8081",
+    },
+    toAdd: {},
   },
 ];
 
