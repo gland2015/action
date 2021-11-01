@@ -2,6 +2,7 @@ import net from "net";
 import express from "express";
 import { ProcessHelper } from "./ProcessHelper.js";
 import { Shell } from "../public/Shell.js";
+import { SOCKET_HOST, SOCKET_PORT } from "../client/constant";
 
 async function run() {
   const processHelper = new ProcessHelper();
@@ -45,7 +46,7 @@ async function run() {
     });
   });
 
-  server.listen(8098, function () {
+  server.listen(SOCKET_PORT, SOCKET_HOST, function () {
     console.log("server is listening");
   });
 
@@ -59,7 +60,7 @@ async function run() {
     if (id) {
       payload = processHelper.GetProcessCommand(id);
     }
-    res.json({payload});
+    res.json({ payload });
     res.end();
   });
 

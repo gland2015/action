@@ -117,6 +117,25 @@ export class Shell {
     return result;
   }
 
+  async GetProcessIdByPort(port) {
+    let result = "";
+    try {
+      result = await this.runCmd(`
+        (Get-NetTCPConnection -LocalPort ${port} | Where-Object {$_.State -Match "Listen"}).OwningProcess[0]
+      `);
+    } catch {}
+    return result.trim();
+  }
+
+  async SetProcessKillByPort(port) {
+    let pid = await this.GetProcessIdByPort(port);
+    if (pid) {
+      await this.runCmd(`
+        Stop-Process -ID ${pid} -Force
+      `);
+    }
+  }
+
   /*----------- Env Operation ------------*/
   async GetUserEnvList() {
     const listStr = await this.runCmd(`
