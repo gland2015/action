@@ -127,6 +127,16 @@ export class Shell {
     return result.trim();
   }
 
+  async GetProcessStatusByPort(port) {
+    let pid = await this.GetProcessIdByPort(port);
+    if (pid) {
+      let result = await this.runCmd(`
+        Get-Process -Id ${pid}
+      `);
+      return result;
+    }
+  }
+
   async SetProcessKillByPort(port) {
     let pid = await this.GetProcessIdByPort(port);
     if (pid) {

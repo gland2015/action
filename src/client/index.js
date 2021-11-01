@@ -10,6 +10,7 @@ import { Http } from "./cmd_http.js";
 import { Proxy } from "./cmd_proxy.js";
 import { Test } from "./cmd_test.js";
 import { Download } from "./cmd_download.js";
+import { Port } from "./cmd_port.js";
 
 const program = new Command();
 
@@ -73,7 +74,7 @@ program
 
 program
   .command("download")
-  .arguments("[URL] [outFile]", "URL and outFile")
+  .arguments("<URL> [outFile]", "URL and outFile")
   .action(async function (URL, outFile) {
     await new Download().exec({ URL, outFile });
     process.exit();
@@ -86,16 +87,10 @@ program.command("test").action(async function (args) {
 
 program
   .command("port")
-  .argument("[target]", "to port target")
-  .action(function (target) {
-    console.log("port target - " + target);
-  });
-
-program
-  .command("git")
-  .argument("[target]", "to git target")
-  .action(function (target) {
-    console.log("git target - " + target);
+  .arguments("<actionType> <portNum>", "to port target")
+  .action(async function (actionType, portNum) {
+    await new Port().exec({ actionType, portNum });
+    process.exit();
   });
 
 // console.log("process.argv", process.argv);

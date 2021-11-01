@@ -5,7 +5,14 @@ export class Port {
     this.shell = new Shell();
   }
 
-  async exec() {
-
+  async exec({ actionType, portNum }) {
+    if (actionType === "status") {
+      let result = await this.shell.GetProcessStatusByPort(portNum);
+      console.log(result);
+      return;
+    }
+    if (actionType === "kill") {
+      await this.shell.SetProcessKillByPort(portNum);
+    }
   }
 }

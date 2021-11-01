@@ -8,7 +8,6 @@ export class Test {
   }
 
   async exec() {
-    let r = await this.shell.GetProcessByPort(252);
-    console.log(r);
+
   }
 }
