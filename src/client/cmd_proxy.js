@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import { parseDomain, ParseResultType } from "parse-domain";
 import SocksProxyAgent from "socks-proxy-agent";
 import HttpProxyAgent from "http-proxy-agent";
+import HttpsProxyAgent from "https-proxy-agent";
 
 import { SSL_CERT_ROOT_PATH, HTTP_MITM_PROXY_PORT } from "./constant.js";
 import { Shell } from "../public/Shell.js";
@@ -14,7 +15,6 @@ export class Proxy {
   constructor() {
     this.shell = new Shell();
 
-    this.PORT = process.env.PORT || HTTP_MITM_PROXY_PORT;
     this.SSL_CA_DIR = path.resolve(SSL_CERT_ROOT_PATH, "./.http-mitm-proxy");
     this.PATH_CA_PEM = path.resolve(SSL_CERT_ROOT_PATH, "RootCA.pem");
     this.PATH_CA_KEY = path.resolve(SSL_CERT_ROOT_PATH, "RootCA.key");
@@ -75,7 +75,8 @@ export class Proxy {
       return;
     }
 
-    const PATH_fileMap = this.getFileMapPath(args.map);
+    const PORT = args.port || process.env.PORT || HTTP_MITM_PROXY_PORT;
+    const PATH_fileMap = await this.getFileMapPath(args.map);
     const PATH_fileMapDir = path.dirname(PATH_fileMap);
 
     let fileMap;
@@ -132,7 +133,7 @@ export class Proxy {
     };
 
     http_mitm_proxy.onCertificateMissing = async (ctx, files, callback) => {
-      const { hosts, ips, basename } = this.parseHostname(hostname);
+      const { hosts, ips, basename } = this.parseHostname(ctx.hostname);
 
       const outDir = path.dirname(ctx.files.keyFile);
       await this.shell.GenSSLSubCert(
@@ -154,14 +155,31 @@ export class Proxy {
     http_mitm_proxy.onResponseEnd(function (ctx, callback) {
       const req = ctx.clientToProxyRequest;
       const url = `http${ctx.isSSL ? "s" : ""}://` + req.headers.host + req.url;
+      const res = ctx.proxyToClientResponse;
 
-      // todo
-      console.log("------url-------" + url + "------url------", ctx);
+      console.log(
+        "-----res-url-----" + url + "------res-url------",
+        res.statusCode
+      );
       return callback();
     });
 
+    http_mitm_proxy.onError(function (ctx, err, errorKind) {
+      // ctx may be null
+      if (ctx) {
+        const req = ctx.clientToProxyRequest;
+        const url =
+          `http${ctx.isSSL ? "s" : ""}://` + req.headers.host + req.url;
+        console.log("-----error-url-----" + url + "------error-url------", err);
+      } else {
+        console.log("err", err);
+      }
+    });
+
     return new Promise((resolve, reject) => {
-      let agent = null;
+      let httpAgent = null;
+      let httpsAgent = null;
+
       let PROXY_NEXT =
         process.env.HTTP_PROXY ||
         process.env.SOCKS_PROXY ||
@@ -170,11 +188,12 @@ export class Proxy {
       if (PROXY_NEXT) {
         if (PROXY_NEXT.match(/^http/)) {
           console.log("use HTTP_PROXY " + PROXY_NEXT);
-          agent = new HttpProxyAgent(PROXY_NEXT);
+          httpAgent = new HttpProxyAgent(PROXY_NEXT);
+          httpsAgent = new HttpsProxyAgent(PROXY_NEXT);
         } else if (PROXY_NEXT.match(/^socks/)) {
           PROXY_NEXT = PROXY_NEXT.replace(/^socks5\:/, "socks:");
           console.log("use SOCKS_PROXY " + PROXY_NEXT);
-          agent = new SocksProxyAgent(PROXY_NEXT);
+          httpAgent = httpsAgent = new SocksProxyAgent(PROXY_NEXT);
         } else {
           throw new Error("unknown proxy: " + PROXY_NEXT);
         }
@@ -182,14 +201,13 @@ export class Proxy {
 
       http_mitm_proxy.listen(
         {
-          port: this.PORT,
+          port: PORT,
           sslCaDir: this.SSL_CA_DIR,
-          forceSNI: true,
-          httpAgent: agent,
-          httpsAgent: agent,
+          httpAgent,
+          httpsAgent,
         },
-        function () {
-          console.log("port", port);
+        () => {
+          console.log("port", PORT);
         }
       );
     });

@@ -67,6 +67,7 @@ program
 program
   .command("proxy")
   .option("--map <map>", "URI -> FILE Map, JSON FILE")
+  .option("--port <port>", "Listening Port")
   .action(async function (args) {
     await new Proxy().exec(args);
     process.exit();
