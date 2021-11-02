@@ -135,6 +135,7 @@ export class Shell {
       `);
       return result;
     }
+    return "";
   }
 
   async SetProcessKillByPort(port) {

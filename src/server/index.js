@@ -1,8 +1,18 @@
 import net from "net";
+import fs from "fs";
 import express from "express";
+import os from "os";
+import child_process from "child_process";
 import { ProcessHelper } from "./ProcessHelper.js";
 import { Shell } from "../public/Shell.js";
-import { SOCKET_HOST, SOCKET_PORT } from "../client/constant";
+import {
+  SOCKET_HOST,
+  SOCKET_PORT,
+  taskList,
+  InitContent,
+} from "../client/constant.js";
+
+run();
 
 async function run() {
   const processHelper = new ProcessHelper();
@@ -47,24 +57,35 @@ async function run() {
   });
 
   server.listen(SOCKET_PORT, SOCKET_HOST, function () {
-    console.log("server is listening");
+    console.log("server is listening " + SOCKET_PORT);
+    runTask(taskList);
   });
 
   server.on("error", function () {});
-
-  // http
-  let app = express();
-  app.get("/process/command", function (req, res) {
-    const id = req.query?.id;
-    let payload = "";
-    if (id) {
-      payload = processHelper.GetProcessCommand(id);
-    }
-    res.json({ payload });
-    res.end();
-  });
-
-  app.listen(8099);
 }
 
-run();
+function runTask(taskList) {
+  let env = Object.assign({}, process.env);
+
+  let Path = InitContent?.env?.toAdd?.Path || [];
+  env.Path = (env.Path || "") + ";" + Path.join(";");
+
+  taskList.forEach(function (item) {
+    if (!item.enable) return;
+    if (item.type === "command") {
+      child_process.spawn(item.content, {
+        cwd: item.cwd,
+        env: env,
+        shell: "pwsh",
+        stdio: "pipe",
+        windowsHide: true,
+      });
+    }
+  });
+}
+
+/*
+  windows服务默认使用系统账户(system), 需要手动添加用户path
+  获取当前用户信息: require("os").userInfo()
+
+*/
