@@ -5,12 +5,7 @@ import os from "os";
 import child_process from "child_process";
 import { ProcessHelper } from "./ProcessHelper.js";
 import { Shell } from "../public/Shell.js";
-import {
-  SOCKET_HOST,
-  SOCKET_PORT,
-  taskList,
-  InitContent,
-} from "../client/constant.js";
+import { SOCKET_HOST, SOCKET_PORT, taskList, InitContent } from "../client/constant.js";
 
 run();
 
@@ -73,13 +68,16 @@ function runTask(taskList) {
   taskList.forEach(function (item) {
     if (!item.enable) return;
     if (item.type === "command") {
-      child_process.spawn(item.content, {
+      let subProcess = child_process.spawn(item.content, {
         cwd: item.cwd,
         env: env,
         shell: "pwsh",
         stdio: "pipe",
         windowsHide: true,
       });
+
+      subProcess.stdout.pipe(process.stdout);
+      subProcess.stderr.pipe(process.stderr);
     }
   });
 }
