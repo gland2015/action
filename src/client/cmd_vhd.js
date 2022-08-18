@@ -37,6 +37,7 @@ export class Vhd {
       return this.select();
     }
     let rootPath;
+    
     try {
       rootPath = await this.diskBase.getRootPathBy(parents);
     } catch (errData) {

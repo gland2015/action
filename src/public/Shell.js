@@ -68,7 +68,7 @@ export class Shell {
 
   async GetVhdFileHasAttach(filepath) {
     const diskStr = await this.runCmd(`
-      Get-DiskImage -ImagePath ${filepath.trim()} | ConvertTo-Json -Depth 2
+      Get-DiskImage -ImagePath "${filepath.trim()}" | ConvertTo-Json -Depth 2
     `);
     const diskInfo = JSON.parse(diskStr);
     return this.selectMaxVolume(diskInfo, (o) => o.Attached);
@@ -79,11 +79,11 @@ export class Shell {
     const hasAttached = await this.GetVhdFileHasAttach(filepath);
     if (!hasAttached) {
       await this.runCmd(`
-        Mount-DiskImage -ImagePath ${filepath}
+        Mount-DiskImage -ImagePath "${filepath}"
       `);
     }
     const volStr = await this.runCmd(`
-      Get-DiskImage -ImagePath ${filepath} | Get-Disk | Get-Partition | Get-Volume | ConvertTo-Json -Depth 2
+      Get-DiskImage -ImagePath "${filepath}" | Get-Disk | Get-Partition | Get-Volume | ConvertTo-Json -Depth 2
     `);
     const volInfo = JSON.parse(volStr);
     return this.selectMaxVolume(volInfo, (o) => o.DriveLetter);

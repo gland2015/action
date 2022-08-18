@@ -68,16 +68,19 @@ function runTask(taskList) {
   taskList.forEach(function (item) {
     if (!item.enable) return;
     if (item.type === "command") {
-      let subProcess = child_process.spawn(item.content, {
-        cwd: item.cwd,
-        env: env,
-        shell: "pwsh",
-        stdio: "pipe",
-        windowsHide: true,
-      });
+      setTimeout(() => {
+        let subProcess = child_process.spawn(item.content, {
+          cwd: item.cwd,
+          env: env,
+          shell: "pwsh",
+          stdio: "pipe",
+          windowsHide: true,
+          
+        });
 
-      subProcess.stdout.pipe(process.stdout);
-      subProcess.stderr.pipe(process.stderr);
+        subProcess.stdout.pipe(process.stdout);
+        subProcess.stderr.pipe(process.stderr);
+      }, item.delay || 0);
     }
   });
 }

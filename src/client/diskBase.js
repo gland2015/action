@@ -21,19 +21,14 @@ export class DiskBase {
     }
 
     return new Promise(function (resolve, reject) {
-      child_process.exec(
-        "wmic diskdrive get Model, InterfaceType, MediaType, SerialNumber",
-        function (error, stdout, stderr) {
-          reject({
-            action: ActionType.SHOW_MESSAGE,
-            message: [
-              `Physical disk that sericalNumber is ${serialNumber} not found!`,
-              `The following is a list of available disks:`,
-              stdout,
-            ].join("\n"),
-          });
-        }
-      );
+      child_process.exec("wmic diskdrive get Model, InterfaceType, MediaType, SerialNumber", function (error, stdout, stderr) {
+        reject({
+          action: ActionType.SHOW_MESSAGE,
+          message: [`Physical disk that sericalNumber is ${serialNumber} not found!`, `The following is a list of available disks:`, stdout].join(
+            "\n"
+          ),
+        });
+      });
     });
   }
 
@@ -75,7 +70,9 @@ export class DiskBase {
       }
 
       if (item.type === this.diskHelper.itemType.virtualDisk) {
-        tarPath = await this.loadVhdDisk(path.resolve(tarPath, item.filepath));
+        let p = path.resolve(tarPath, item.filepath);
+        // console.log("p", p);
+        tarPath = await this.loadVhdDisk(p);
         continue;
       }
     }

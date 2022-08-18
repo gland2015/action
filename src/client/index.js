@@ -177,7 +177,10 @@ todo 禁止自动分配, vhd分配指定盘符 diskpart disable auto physical
 
 // bat文件中 %~dp0 表示当前bat所在的文件夹，结尾带反斜杠
 
-//  for /f %%a in ('node ./test.js') do set "dow=%%a"
+//  for /f %%a in ('node ./test.js') do set "dow=%%a" 
+
+// 获卷id
+// https://www.addictivetips.com/windows-tips/find-disk-and-volume-guid-windows-10/
 
 /*
 
